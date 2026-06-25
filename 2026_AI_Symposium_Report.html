@@ -619,7 +619,7 @@
 
     <div class="chart-box">
       <figure class="chart-figure" aria-labelledby="chartOverall-title">
-      <p class="chart-title" id="chartOverall-title">Overall experience — mean vs. % who agreed (4–5)</p>
+      <p class="chart-title" id="chartOverall-title">Overall experience — mean rating (1–5)</p>
       <p class="chart-sr-note">Decorative chart. Equivalent data: Overall Symposium Experience table above (mean and % Agree columns).</p>
       <div class="chart-visual">
       <div class="chart-wrap combo"><canvas id="chartOverall"></canvas></div>
@@ -1155,16 +1155,14 @@ It also would have been interesting to have one or two undergraduate students of
         x:{ ticks:{ font:{ size:11 } } } } }
   });
 
-  // 6. Overall experience: mean + %agree (dual axis)
+  // 6. Overall experience — mean bars (% agree labeled above each bar)
   const overallLabels = ['Relevant to my work', 'Practical ideas to apply', 'Format/engagement', 'New perspectives'];
   const overallAgree = [98, 88, 78, 84];
   new Chart(document.getElementById('chartOverall'), {
     type:'bar',
     data:{ labels:overallLabels,
       datasets:[
-        { label:'Mean (1–5)', data:[4.64,4.28,4.24,4.18], backgroundColor:BAR, borderRadius:4, yAxisID:'y', order:2,
-          datalabels:{ display:false } },
-        { label:'% Agree (4–5)', data:overallAgree, type:'line', borderColor:'#FFB81C', backgroundColor:'#FFB81C', tension:.3, yAxisID:'y1', pointRadius:4, pointHoverRadius:5, borderWidth:2, order:1,
+        { label:'Mean (1–5)', data:[4.64,4.28,4.24,4.18], backgroundColor:BAR, borderRadius:4,
           datalabels:{ display:false } }
       ] },
     plugins:[{
@@ -1196,17 +1194,15 @@ It also would have been interesting to have one or two undergraduate students of
     }],
     options:{ maintainAspectRatio:false, animation: chartAnim,
       layout:{ padding:{ top:36, bottom:8, left:4, right:12 } },
-      interaction:{ mode:'index', intersect:false },
       plugins:{
-        legend:{ position:'top' },
-        tooltip:{ mode:'index', intersect:false, filter:(item)=> item.datasetIndex <= 1, callbacks:{
-          label: comboTooltipLabels([4.64,4.28,4.24,4.18], overallAgree, [50,50,50,50])
+        legend:{ display:false },
+        tooltip:{ callbacks:{
+          label:(ctx)=> 'Mean: ' + ctx.parsed.y.toFixed(2) + ' (n=50)',
+          afterLabel:(ctx)=> '% Agree: ' + overallAgree[ctx.dataIndex] + '%'
         }}
       },
       scales:{
-        y:{ min:1, max:5, position:'left', title:{ display:true, text:'Mean' } },
-        y1:{ beginAtZero:true, max:100, position:'right', grid:{ drawOnChartArea:false }, title:{ display:true, text:'% Agree' },
-          ticks:{ stepSize:20, callback:(v)=> v + '%' } },
+        y:{ min:1, max:5, title:{ display:true, text:'Mean' } },
         x:{ ticks:{ font:{ size:11 }, maxRotation:0, autoSkip:false } }
       } }
   });
