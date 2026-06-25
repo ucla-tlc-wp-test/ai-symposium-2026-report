@@ -620,7 +620,7 @@
     <div class="chart-box">
       <figure class="chart-figure" aria-labelledby="chartOverall-title">
       <p class="chart-title" id="chartOverall-title">Overall experience — mean rating (1–5)</p>
-      <p class="chart-sr-note">Decorative chart. Equivalent data: Overall Symposium Experience table above (mean and % Agree columns).</p>
+      <p class="chart-sr-note">Decorative chart. Equivalent data: Overall Symposium Experience table above (mean column).</p>
       <div class="chart-visual">
       <div class="chart-wrap combo"><canvas id="chartOverall"></canvas></div>
       </div>
@@ -672,7 +672,7 @@
 
     <div class="chart-box">
       <figure class="chart-figure" aria-labelledby="chartConcurrent-title">
-      <p class="chart-title" id="chartConcurrent-title">Concurrent sessions — mean vs. % who agreed (4–5)</p>
+      <p class="chart-title" id="chartConcurrent-title">Concurrent sessions — mean rating (1–5)</p>
       <p class="chart-sr-note">Decorative chart. Equivalent data: Concurrent Sessions table above. <span class="sample-key"><span class="key-red">Red</span> outline = small sample (n &lt; 10).</span></p>
       <div class="chart-visual">
       <div class="chart-wrap combo tall"><canvas id="chartConcurrent"></canvas></div>
@@ -981,14 +981,6 @@ It also would have been interesting to have one or two undergraduate students of
     el.style.top = (canvas.offsetTop + tooltip.caretY) + 'px';
     el.classList.add('is-visible');
   }
-  function comboTooltipLabels(meanVal, pctVal, nVal){
-    return function(ctx){
-      const i = ctx.dataIndex;
-      if (ctx.datasetIndex === 0) return 'Mean: ' + meanVal[i].toFixed(2) + (nVal ? ' (n=' + nVal[i] + ')' : '');
-      if (ctx.datasetIndex === 1) return '% Agree: ' + pctVal[i] + '%';
-      return '';
-    };
-  }
   function countPctTooltip(total){
     return function(c){
       const v = c.parsed.x != null ? c.parsed.x : c.parsed;
@@ -1155,9 +1147,8 @@ It also would have been interesting to have one or two undergraduate students of
         x:{ ticks:{ font:{ size:11 } } } } }
   });
 
-  // 6. Overall experience — mean bars (% agree labeled above each bar)
+  // 6. Overall experience — mean bars
   const overallLabels = ['Relevant to my work', 'Practical ideas to apply', 'Format/engagement', 'New perspectives'];
-  const overallAgree = [98, 88, 78, 84];
   new Chart(document.getElementById('chartOverall'), {
     type:'bar',
     data:{ labels:overallLabels,
@@ -1175,16 +1166,9 @@ It also would have been interesting to have one or two undergraduate students of
           if (!bar || bar.height < 20) return;
           const x = bar.x;
           const mean = chart.data.datasets[0].data[i].toFixed(2);
-          const pct = overallAgree[i] + '%';
           ctx.save();
           ctx.textAlign = 'center';
           ctx.font = '700 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-          ctx.fillStyle = '#7a5a00';
-          ctx.textBaseline = 'bottom';
-          ctx.lineWidth = 3;
-          ctx.strokeStyle = '#ffffff';
-          ctx.strokeText(pct, x, bar.y - 8);
-          ctx.fillText(pct, x, bar.y - 8);
           ctx.fillStyle = '#ffffff';
           ctx.textBaseline = 'middle';
           ctx.fillText(mean, x, bar.y + bar.height * 0.45);
@@ -1193,12 +1177,11 @@ It also would have been interesting to have one or two undergraduate students of
       }
     }],
     options:{ maintainAspectRatio:false, animation: chartAnim,
-      layout:{ padding:{ top:36, bottom:8, left:4, right:12 } },
+      layout:{ padding:{ top:8, bottom:8, left:4, right:12 } },
       plugins:{
         legend:{ display:false },
         tooltip:{ callbacks:{
-          label:(ctx)=> 'Mean: ' + ctx.parsed.y.toFixed(2) + ' (n=50)',
-          afterLabel:(ctx)=> '% Agree: ' + overallAgree[ctx.dataIndex] + '%'
+          label:(ctx)=> 'Mean: ' + ctx.parsed.y.toFixed(2) + ' (n=50)'
         }}
       },
       scales:{
@@ -1237,10 +1220,9 @@ It also would have been interesting to have one or two undergraduate students of
         y:{ stacked:true } } }
   });
 
-  // 7. Concurrent sessions — mean + % agree (combo bar, like overall experience)
+  // 7. Concurrent sessions — mean (horizontal bars)
   const SMALL='#bc4749';
   const concMeans = [4.56, 4.31, 3.85, 3.61, 3.50];
-  const concAgree = [96, 88, 74, 56, 50]; // top-2-box % from pooled 3-item responses
   const concLabels = [
     'Using AI Tools',
     'Evaluating & Applying',
@@ -1254,11 +1236,9 @@ It also would have been interesting to have one or two undergraduate students of
     type:'bar',
     data:{ labels:concLabels,
       datasets:[
-        { label:'Mean (1–5)', data:concMeans, backgroundColor:BAR, borderRadius:4, xAxisID:'x', order:2,
+        { label:'Mean (1–5)', data:concMeans, backgroundColor:BAR, borderRadius:4,
           borderColor:concBarBorders.map(c=>c||BAR),
           borderWidth:concBarBorders.map(c=>c?3:0),
-          datalabels:{ display:false } },
-        { label:'% Agree (4–5)', data:concAgree, type:'line', borderColor:'#FFB81C', backgroundColor:'#FFB81C', tension:.3, xAxisID:'x1', pointRadius:4, pointHoverRadius:5, borderWidth:2, order:1,
           datalabels:{ display:false } }
       ] },
     plugins:[{
@@ -1278,38 +1258,17 @@ It also would have been interesting to have one or two undergraduate students of
           ctx.restore();
         });
       }
-    },{
-      id:'concPctLabels',
-      afterDatasetsDraw(chart){
-        const ctx = chart.ctx;
-        chart.getDatasetMeta(1).data.forEach((point, i)=>{
-          if (!point) return;
-          ctx.save();
-          ctx.font = '700 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-          ctx.fillStyle = '#7a5a00';
-          ctx.textAlign = 'left';
-          ctx.textBaseline = 'middle';
-          ctx.lineWidth = 3;
-          ctx.strokeStyle = '#ffffff';
-          const text = concAgree[i] + '%';
-          ctx.strokeText(text, point.x + 5, point.y);
-          ctx.fillText(text, point.x + 5, point.y);
-          ctx.restore();
-        });
-      }
     }],
     options:{ indexAxis:'y', maintainAspectRatio:false, animation: chartAnim,
-      layout:{ padding:{ top:12, bottom:8, left:4, right:52 } },
-      interaction:{ mode:'index', intersect:false },
+      layout:{ padding:{ top:12, bottom:8, left:4, right:16 } },
       plugins:{
-        legend:{ position:'top' },
-        tooltip:{ mode:'index', intersect:false, filter:(item)=> item.datasetIndex <= 1, callbacks:{
-          label: comboTooltipLabels(concMeans, concAgree, concN)
+        legend:{ display:false },
+        tooltip:{ callbacks:{
+          label:(ctx)=> 'Mean: ' + ctx.parsed.x.toFixed(2) + ' (n=' + concN[ctx.dataIndex] + ')'
         }}
       },
       scales:{
-        x:{ min:1, max:5, position:'bottom', title:{ display:true, text:'Mean' } },
-        x1:{ min:0, max:100, position:'top', grid:{ drawOnChartArea:false }, title:{ display:true, text:'% Agree' } },
+        x:{ min:1, max:5, title:{ display:true, text:'Mean (1–5)' } },
         y:{ ticks:{ font:{ size:11 }, autoSkip:false } }
       } }
   });
